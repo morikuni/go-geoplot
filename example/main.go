@@ -22,6 +22,10 @@ func main() {
 			X: 16,
 			Y: 32,
 		},
+		PopupAnchor: &geoplot.Point{
+			X: 0,
+			Y: -32,
+		},
 	}
 
 	m := &geoplot.Map{

@@ -120,18 +120,20 @@ type Size struct {
 }
 
 type Icon struct {
-	URL    string
-	Size   *Size
-	Anchor *Point
+	URL         string
+	Size        *Size
+	Anchor      *Point
+	PopupAnchor *Point
 
 	id string
 }
 
 func (i *Icon) toJS() (template.JS, error) {
 	type icon struct {
-		IconURL    string `json:"iconUrl"`
-		IconSize   [2]int `json:"iconSize,omitempty"`
-		IconAnchor [2]int `json:"iconAnchor,omitempty"`
+		IconURL     string `json:"iconUrl"`
+		IconSize    [2]int `json:"iconSize,omitempty"`
+		IconAnchor  [2]int `json:"iconAnchor,omitempty"`
+		PopupAnchor [2]int `json:"popupAnchor,omitempty"`
 	}
 
 	ic := icon{
@@ -142,6 +144,9 @@ func (i *Icon) toJS() (template.JS, error) {
 	}
 	if i.Anchor != nil {
 		ic.IconAnchor = [2]int{i.Anchor.X, i.Anchor.Y}
+	}
+	if i.PopupAnchor != nil {
+		ic.PopupAnchor = [2]int{i.PopupAnchor.X, i.PopupAnchor.Y}
 	}
 
 	bs, err := json.Marshal(ic)
