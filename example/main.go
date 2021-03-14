@@ -34,7 +34,7 @@ func main() {
 	}
 	m.AddMarker(&geoplot.Marker{
 		LatLng: tokyoTower,
-		Popup:  "Hello",
+		Popup:  "Hello\nWorld",
 		Icon:   googleMapIcon,
 	})
 	m.AddPolyline(&geoplot.Polyline{

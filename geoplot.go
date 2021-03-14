@@ -88,7 +88,7 @@ func (m *Marker) toJS() (template.JS, error) {
 		m.LatLng.Latitude,
 		m.LatLng.Longitude,
 		opt.String(),
-		m.Popup,
+		strings.Replace(m.Popup, "\n", "<br/>", -1),
 	)), nil
 }
 
@@ -105,7 +105,7 @@ func (pl *Polyline) toJS() (template.JS, error) {
 
 	return template.JS(fmt.Sprintf("L.polyline(%s).addTo(map).bindPopup(%q);",
 		"["+strings.Join(latlngs, ",")+"]",
-		pl.Popup,
+		strings.Replace(pl.Popup, "\n", "<br/>", -1),
 	)), nil
 }
 
