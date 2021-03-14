@@ -29,7 +29,7 @@ const htmlTemplate = `
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(map);
-      map.attributionControl.addAttribution('&copy; <a href="https://github.com/morikuni/go-geoplot">go-geoplot</a>');
+      map.attributionControl.addAttribution('&copy; <a href="https://github.com/morikuni/go-geoplot">go-geoplot</a> by <a href="https://github.com/morikuni">morikuni</a>');
       {{ range .lines }}
       {{- .}}
       {{ end }}
