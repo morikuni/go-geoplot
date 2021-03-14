@@ -12,12 +12,12 @@ import (
 )
 
 type Map struct {
+	Center *LatLng
+	Zoom   int
+	Area   *Area
+
 	markers   []*Marker
 	polylines []*Polyline
-}
-
-func NewMap() *Map {
-	return &Map{}
 }
 
 func (m *Map) AddMarker(mk *Marker) {
@@ -26,6 +26,31 @@ func (m *Map) AddMarker(mk *Marker) {
 
 func (m *Map) AddPolyline(pl *Polyline) {
 	m.polylines = append(m.polylines, pl)
+}
+
+func (m *Map) toJS() (template.JS, error) {
+	var lines []string
+	if m.Zoom > 0 {
+		lines = append(lines, fmt.Sprintf("map.setZoom(%d);",
+			m.Zoom,
+		))
+	}
+	if m.Center != nil {
+		lines = append(lines, fmt.Sprintf("map.setView([%f, %f]);",
+			m.Center.Latitude,
+			m.Center.Longitude,
+		))
+	}
+	if m.Area != nil {
+		lines = append(lines, fmt.Sprintf("map.fitBounds([[%f, %f],[%f, %f]]);",
+			m.Area.From.Latitude,
+			m.Area.From.Longitude,
+			m.Area.To.Latitude,
+			m.Area.To.Longitude,
+		))
+	}
+
+	return template.JS(strings.Join(lines, " ")), nil
 }
 
 type LatLng struct {
@@ -38,6 +63,11 @@ func (l *LatLng) Offset(lat, lon float64) *LatLng {
 		l.Latitude + lat,
 		l.Longitude + lon,
 	}
+}
+
+type Area struct {
+	From *LatLng
+	To   *LatLng
 }
 
 type Marker struct {
@@ -84,9 +114,14 @@ type Point struct {
 	Y int
 }
 
+type Size struct {
+	Width  int
+	Height int
+}
+
 type Icon struct {
 	URL    string
-	Size   *Point
+	Size   *Size
 	Anchor *Point
 
 	id string
@@ -103,7 +138,7 @@ func (i *Icon) toJS() (template.JS, error) {
 		IconURL: i.URL,
 	}
 	if i.Size != nil {
-		ic.IconSize = [2]int{i.Size.X, i.Size.Y}
+		ic.IconSize = [2]int{i.Size.Width, i.Size.Height}
 	}
 	if i.Anchor != nil {
 		ic.IconAnchor = [2]int{i.Anchor.X, i.Anchor.Y}
@@ -155,6 +190,13 @@ func ServeMap(w http.ResponseWriter, _ *http.Request, m *Map) error {
 	}
 
 	var lines []template.JS
+
+	l, err := m.toJS()
+	if err != nil {
+		return err
+	}
+	lines = append(lines, l)
+
 	for _, i := range icons {
 		l, err := i.toJS()
 		if err != nil {

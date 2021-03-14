@@ -23,8 +23,8 @@ const htmlTemplate = `
     <div id="map"></div>
     <script>
       const map = L.map('map', {
-        center: [35.6598003, 139.7023894],
-        zoom: 13
+        center: [0, 0],
+        zoom: 1,
       });
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

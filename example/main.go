@@ -14,9 +14,9 @@ func main() {
 	}
 	googleMapIcon := &geoplot.Icon{
 		URL: "https://maps.google.com/mapfiles/ms/icons/red-dot.png",
-		Size: &geoplot.Point{
-			X: 32,
-			Y: 32,
+		Size: &geoplot.Size{
+			Width:  32,
+			Height: 32,
 		},
 		Anchor: &geoplot.Point{
 			X: 16,
@@ -24,7 +24,14 @@ func main() {
 		},
 	}
 
-	m := geoplot.NewMap()
+	m := &geoplot.Map{
+		Center: tokyoTower,
+		Zoom:   7,
+		Area: &geoplot.Area{
+			From: tokyoTower.Offset(-0.1, -0.1),
+			To:   tokyoTower.Offset(0.2, 0.2),
+		},
+	}
 	m.AddMarker(&geoplot.Marker{
 		LatLng: tokyoTower,
 		Popup:  "Hello",
