@@ -18,6 +18,7 @@ type Map struct {
 
 	markers   []*Marker
 	polylines []*Polyline
+	circles   []*Circle
 }
 
 func (m *Map) AddMarker(mk *Marker) {
@@ -26,6 +27,10 @@ func (m *Map) AddMarker(mk *Marker) {
 
 func (m *Map) AddPolyline(pl *Polyline) {
 	m.polylines = append(m.polylines, pl)
+}
+
+func (m *Map) AddCircle(c *Circle) {
+	m.circles = append(m.circles, c)
 }
 
 func (m *Map) toJS() (template.JS, error) {
@@ -106,6 +111,21 @@ func (pl *Polyline) toJS() (template.JS, error) {
 	return template.JS(fmt.Sprintf("L.polyline(%s).addTo(map).bindPopup(%q);",
 		"["+strings.Join(latlngs, ",")+"]",
 		strings.Replace(pl.Popup, "\n", "<br/>", -1),
+	)), nil
+}
+
+type Circle struct {
+	LatLng      *LatLng
+	RadiusMeter int
+	Popup       string
+}
+
+func (c *Circle) toJS() (template.JS, error) {
+	return template.JS(fmt.Sprintf("L.circle([%f, %f], {radius: %d}).addTo(map).bindPopup(%q);",
+		c.LatLng.Latitude,
+		c.LatLng.Longitude,
+		c.RadiusMeter,
+		strings.Replace(c.Popup, "\n", "<br/>", -1),
 	)), nil
 }
 
@@ -204,6 +224,14 @@ func ServeMap(w http.ResponseWriter, _ *http.Request, m *Map) error {
 
 	for _, i := range icons {
 		l, err := i.toJS()
+		if err != nil {
+			return err
+		}
+		lines = append(lines, l)
+	}
+
+	for _, c := range m.circles {
+		l, err := c.toJS()
 		if err != nil {
 			return err
 		}

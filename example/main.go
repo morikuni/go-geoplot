@@ -51,6 +51,10 @@ func main() {
 		},
 		Popup: "World",
 	})
+	m.AddCircle(&geoplot.Circle{
+		LatLng:      tokyoTower,
+		RadiusMeter: 1000,
+	})
 	err := http.ListenAndServe(":8080", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		err := geoplot.ServeMap(w, r, m)
 		if err != nil {
