@@ -141,6 +141,7 @@ type Size struct {
 
 type Icon struct {
 	URL         string
+	HTML        string
 	Size        *Size
 	Anchor      *Point
 	PopupAnchor *Point
@@ -148,16 +149,55 @@ type Icon struct {
 	id string
 }
 
+func htmlIcon(r, g, b int) string {
+	const format = `
+<svg width="100%%" height="100%%" viewBox="0 0 32 48" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <path d="M1.701,23.023C0.613,20.877 0,18.454 0,15.89C0,7.12 7.169,0 15.998,0C24.828,0 31.997,7.12 31.997,15.89C31.997,18.454 31.389,20.854 30.3,23L15.998,48.007L1.701,23.023Z" style="fill:rgb(%d,%d,%d);"/>
+    <path d="M1.701,23.023C0.613,20.877 0,18.454 0,15.89C0,7.12 7.169,0 15.998,0C24.828,0 31.997,7.12 31.997,15.89C31.997,18.454 31.389,20.854 30.3,23L15.998,48.007L1.701,23.023ZM2.582,22.549C1.57,20.544 1,18.283 1,15.89C1,7.67 7.722,1 15.998,1C24.274,1 30.997,7.67 30.997,15.89C30.997,18.277 30.434,20.513 29.425,22.514C29.419,22.526 15.998,45.993 15.998,45.993L2.582,22.549Z"/>
+    <g transform="matrix(1.02055,0,0,1.02055,-1.48306,1.74407)">
+        <circle cx="17.129" cy="13.971" r="5.862" style="fill:white;"/>
+    </g>
+</svg>
+`
+	return fmt.Sprintf(format, r, g, b)
+}
+
+func ColorIcon(r, g, b int) *Icon {
+	return &Icon{
+		HTML: htmlIcon(r, g, b),
+		Size: &Size{
+			Width:  20,
+			Height: 30,
+		},
+		Anchor: &Point{
+			X: 10,
+			Y: 30,
+		},
+		PopupAnchor: &Point{
+			X: 0,
+			Y: -30,
+		},
+	}
+}
+
 func (i *Icon) toJS() (template.JS, error) {
 	type icon struct {
+		HTML        string `json:"html,omitempty"`
 		IconURL     string `json:"iconUrl"`
 		IconSize    [2]int `json:"iconSize,omitempty"`
 		IconAnchor  [2]int `json:"iconAnchor,omitempty"`
 		PopupAnchor [2]int `json:"popupAnchor,omitempty"`
+		ClassName   string `json:"className"`
 	}
 
+	method := "icon"
 	ic := icon{
 		IconURL: i.URL,
+	}
+	if ic.IconURL == "" {
+		method = "divIcon"
+		ic.HTML = i.HTML
+		ic.ClassName = ""
 	}
 	if i.Size != nil {
 		ic.IconSize = [2]int{i.Size.Width, i.Size.Height}
@@ -174,7 +214,7 @@ func (i *Icon) toJS() (template.JS, error) {
 		return "", err
 	}
 
-	return template.JS(fmt.Sprintf("const %s = L.icon(%s);", i.id, string(bs))), nil
+	return template.JS(fmt.Sprintf("const %s = L.%s(%s);", i.id, method, string(bs))), nil
 }
 
 func generateID() string {
