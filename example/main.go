@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"image/color"
 	"net/http"
 
 	"github.com/morikuni/go-geoplot"
@@ -12,21 +13,7 @@ func main() {
 		Latitude:  35.658584,
 		Longitude: 139.7454316,
 	}
-	googleMapIcon := &geoplot.Icon{
-		URL: "https://maps.google.com/mapfiles/ms/icons/red-dot.png",
-		Size: &geoplot.Size{
-			Width:  32,
-			Height: 32,
-		},
-		Anchor: &geoplot.Point{
-			X: 16,
-			Y: 32,
-		},
-		PopupAnchor: &geoplot.Point{
-			X: 0,
-			Y: -32,
-		},
-	}
+	icon := geoplot.ColorIcon(255, 255, 0)
 
 	m := &geoplot.Map{
 		Center: tokyoTower,
@@ -37,9 +24,10 @@ func main() {
 		},
 	}
 	m.AddMarker(&geoplot.Marker{
-		LatLng: tokyoTower,
-		Popup:  "Hello\nWorld",
-		Icon:   googleMapIcon,
+		LatLng:  tokyoTower,
+		Popup:   "Hello\nWorld",
+		Tooltip: "Hello",
+		Icon:    icon,
 	})
 	m.AddPolyline(&geoplot.Polyline{
 		LatLngs: []*geoplot.LatLng{
@@ -50,10 +38,12 @@ func main() {
 			tokyoTower.Offset(-0.1, -0.1),
 		},
 		Popup: "World",
+		Color: &color.RGBA{0xff, 0, 0, 0},
 	})
 	m.AddCircle(&geoplot.Circle{
 		LatLng:      tokyoTower,
 		RadiusMeter: 1000,
+		Tooltip:     "Circle of life",
 	})
 	err := http.ListenAndServe(":8080", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		err := geoplot.ServeMap(w, r, m)

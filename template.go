@@ -1,5 +1,6 @@
 package geoplot
 
+// language=GoTemplate
 const htmlTemplate = `
 <!DOCTYPE html>
 <html>

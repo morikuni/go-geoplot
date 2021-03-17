@@ -77,9 +77,10 @@ type Area struct {
 }
 
 type Marker struct {
-	LatLng *LatLng
-	Popup  string
-	Icon   *Icon
+	LatLng  *LatLng
+	Popup   string
+	Tooltip string
+	Icon    *Icon
 }
 
 func (m *Marker) toJS() (template.JS, error) {
@@ -90,17 +91,19 @@ func (m *Marker) toJS() (template.JS, error) {
 	}
 	opt.WriteString("}")
 
-	return template.JS(fmt.Sprintf("L.marker([%f, %f], %s).addTo(map).bindPopup(%q);",
+	return template.JS(fmt.Sprintf("L.marker([%f, %f], %s).addTo(map)%s%s;",
 		m.LatLng.Latitude,
 		m.LatLng.Longitude,
 		opt.String(),
-		strings.Replace(m.Popup, "\n", "<br/>", -1),
+		withPopup(m.Popup),
+		withTooltip(m.Tooltip),
 	)), nil
 }
 
 type Polyline struct {
 	LatLngs []*LatLng
 	Popup   string
+	Tooltip string
 	Color   *color.RGBA
 }
 
@@ -124,10 +127,11 @@ func (pl *Polyline) toJS() (template.JS, error) {
 		return "", err
 	}
 
-	return template.JS(fmt.Sprintf("L.polyline(%s, %s).addTo(map).bindPopup(%q);",
+	return template.JS(fmt.Sprintf("L.polyline(%s, %s).addTo(map)%s%s;",
 		"["+strings.Join(latlngs, ",")+"]",
 		string(bs),
-		strings.Replace(pl.Popup, "\n", "<br/>", -1),
+		withPopup(pl.Popup),
+		withTooltip(pl.Tooltip),
 	)), nil
 }
 
@@ -135,14 +139,16 @@ type Circle struct {
 	LatLng      *LatLng
 	RadiusMeter int
 	Popup       string
+	Tooltip     string
 }
 
 func (c *Circle) toJS() (template.JS, error) {
-	return template.JS(fmt.Sprintf("L.circle([%f, %f], {radius: %d}).addTo(map).bindPopup(%q);",
+	return template.JS(fmt.Sprintf("L.circle([%f, %f], {radius: %d}).addTo(map)%s%s;",
 		c.LatLng.Latitude,
 		c.LatLng.Longitude,
 		c.RadiusMeter,
-		strings.Replace(c.Popup, "\n", "<br/>", -1),
+		withPopup(c.Popup),
+		withTooltip(c.Tooltip),
 	)), nil
 }
 
@@ -157,11 +163,12 @@ type Size struct {
 }
 
 type Icon struct {
-	URL         string
-	HTML        string
-	Size        *Size
-	Anchor      *Point
-	PopupAnchor *Point
+	URL           string
+	HTML          string
+	Size          *Size
+	Anchor        *Point
+	PopupAnchor   *Point
+	TooltipAnchor *Point
 
 	id string
 }
@@ -194,17 +201,22 @@ func ColorIcon(r, g, b int) *Icon {
 			X: 0,
 			Y: -30,
 		},
+		TooltipAnchor: &Point{
+			X: 10,
+			Y: -20,
+		},
 	}
 }
 
 func (i *Icon) toJS() (template.JS, error) {
 	type icon struct {
-		HTML        string `json:"html,omitempty"`
-		IconURL     string `json:"iconUrl"`
-		IconSize    [2]int `json:"iconSize,omitempty"`
-		IconAnchor  [2]int `json:"iconAnchor,omitempty"`
-		PopupAnchor [2]int `json:"popupAnchor,omitempty"`
-		ClassName   string `json:"className"`
+		HTML          string `json:"html,omitempty"`
+		IconURL       string `json:"iconUrl"`
+		IconSize      [2]int `json:"iconSize,omitempty"`
+		IconAnchor    [2]int `json:"iconAnchor,omitempty"`
+		PopupAnchor   [2]int `json:"popupAnchor,omitempty"`
+		TooltipAnchor [2]int `json:"tooltipAnchor,omitempty"`
+		ClassName     string `json:"className"`
 	}
 
 	method := "icon"
@@ -225,6 +237,9 @@ func (i *Icon) toJS() (template.JS, error) {
 	if i.PopupAnchor != nil {
 		ic.PopupAnchor = [2]int{i.PopupAnchor.X, i.PopupAnchor.Y}
 	}
+	if i.TooltipAnchor != nil {
+		ic.TooltipAnchor = [2]int{i.TooltipAnchor.X, i.TooltipAnchor.Y}
+	}
 
 	bs, err := json.Marshal(ic)
 	if err != nil {
@@ -232,6 +247,20 @@ func (i *Icon) toJS() (template.JS, error) {
 	}
 
 	return template.JS(fmt.Sprintf("const %s = L.%s(%s);", i.id, method, string(bs))), nil
+}
+
+func withPopup(msg string) string {
+	if msg == "" {
+		return ""
+	}
+	return fmt.Sprintf(".bindPopup(%q)", strings.Replace(msg, "\n", "<br/>", -1))
+}
+
+func withTooltip(msg string) string {
+	if msg == "" {
+		return ""
+	}
+	return fmt.Sprintf(".bindTooltip(%q)", strings.Replace(msg, "\n", "<br/>", -1))
 }
 
 func generateID() string {
