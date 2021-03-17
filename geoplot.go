@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"image/color"
 	"io"
 	"net/http"
 	"strings"
@@ -100,6 +101,7 @@ func (m *Marker) toJS() (template.JS, error) {
 type Polyline struct {
 	LatLngs []*LatLng
 	Popup   string
+	Color   *color.RGBA
 }
 
 func (pl *Polyline) toJS() (template.JS, error) {
@@ -108,8 +110,23 @@ func (pl *Polyline) toJS() (template.JS, error) {
 		latlngs = append(latlngs, fmt.Sprintf("[%f, %f]", l.Latitude, l.Longitude))
 	}
 
-	return template.JS(fmt.Sprintf("L.polyline(%s).addTo(map).bindPopup(%q);",
+	type option struct {
+		Color string `json:"color,omitempty"`
+	}
+
+	opt := option{}
+	if pl.Color != nil {
+		opt.Color = fmt.Sprintf("#%02x%02x%02x", pl.Color.R, pl.Color.G, pl.Color.B)
+	}
+
+	bs, err := json.Marshal(opt)
+	if err != nil {
+		return "", err
+	}
+
+	return template.JS(fmt.Sprintf("L.polyline(%s, %s).addTo(map).bindPopup(%q);",
 		"["+strings.Join(latlngs, ",")+"]",
+		string(bs),
 		strings.Replace(pl.Popup, "\n", "<br/>", -1),
 	)), nil
 }
